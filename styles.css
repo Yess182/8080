@@ -266,3 +266,95 @@ button:disabled {
 .stack-val {
     font-weight: bold;
 }
+
+/* ---- Coprocesador FPU8231 ---- */
+.fpu {
+    grid-column: span 2;
+    background: #f8fafc;
+    border: 1px solid #c7d2fe;
+}
+
+.fpu h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+}
+
+.fpu-badge {
+    font-size: 0.7rem;
+    font-weight: bold;
+    background: #dcfce7;
+    color: #16a34a;
+    border: 1px solid #86efac;
+    border-radius: 9999px;
+    padding: 0.1rem 0.5rem;
+}
+
+.fpu-badge.busy {
+    background: #fef9c3;
+    color: #a16207;
+    border-color: #fde047;
+}
+
+.fpu-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.fpu-reg {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.5rem;
+    text-align: center;
+    background: white;
+}
+
+.fpu-reg span {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.25rem;
+}
+
+.fpu-hex {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+
+.fpu-dec {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    margin-top: 0.25rem;
+}
+
+.fpu-result {
+    background: #eff6ff;
+    border-color: var(--primary-color);
+}
+
+.fpu-op-row {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    color: var(--secondary-color);
+}
+
+#fpu-last-op {
+    font-weight: bold;
+    color: var(--text-color);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.fpu-flags-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.fpu-flags-row .flag-box {
+    flex: 1;
+}

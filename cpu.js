@@ -1,10 +1,19 @@
+let FPUCoprocessorClass;
+if (typeof module !== 'undefined' && typeof require !== 'undefined') {
+    FPUCoprocessorClass = require('./fpu.js');
+} else {
+    FPUCoprocessorClass = FPUCoprocessor;
+}
+
 class Intel8080 {
     constructor() {
         this.memory = new Uint8Array(65536);
+        this.fpu = new FPUCoprocessor();
         this.reset();
     }
 
     reset() {
+        if (this.fpu) this.fpu.reset();
         this.registers = {
             a: 0,
             b: 0,
@@ -265,9 +274,9 @@ class Intel8080 {
             case 0x37: this.flags.cy = true; break; // STC
             case 0x3F: this.flags.cy = !this.flags.cy; break; // CMC
 
-            // Special
-            case 0xDB: this.fetch(); break; // IN (Ignored for now)
-            case 0xD3: this.fetch(); break; // OUT (Ignored for now)
+            // Special / I/O — puerta de entrada al coprocesador FPU
+            case 0xDB: { const port = this.fetch(); this.registers.a = this.ioIn(port); break; } // IN
+            case 0xD3: { const port = this.fetch(); this.ioOut(port, this.registers.a); break; } // OUT
             case 0xFB: break; // EI
             case 0xF3: break; // DI
         }
@@ -292,8 +301,6 @@ class Intel8080 {
             case 2: // SUB
                 res = this.registers.a - val;
                 this.flags.cy = res < 0;
-                // Intel 8080 logic for auxiliary carry in subtraction:
-                // AC is calculated by adding the 4-bit inverted value plus 1
                 this.flags.ac = ((this.registers.a & 0x0F) + ((~val) & 0x0F) + 1) > 0x0F;
                 this.registers.a = res & 0xFF;
                 break;
@@ -301,7 +308,6 @@ class Intel8080 {
                 const b = this.flags.cy ? 1 : 0;
                 res = this.registers.a - val - b;
                 this.flags.cy = res < 0;
-                // Low-level addition logic: A + ~val + ~b. ~b is 1 if b=0, and 0 if b=1.
                 this.flags.ac = ((this.registers.a & 0x0F) + ((~val) & 0x0F) + (b ? 0 : 1)) > 0x0F;
                 this.registers.a = res & 0xFF;
                 break;
@@ -331,6 +337,28 @@ class Intel8080 {
                 return;
         }
         this.updateFlags(this.registers.a);
+    }
+
+    // ---------------------------------------------------------------
+    // Bus de E/S (I/O) — aquí se conectan los periféricos, incluido
+    // el coprocesador de punto flotante FPU8231 en los puertos
+    // 0xF0 (datos) y 0xF1 (comando/estado). Ver fpu.js para el
+    // protocolo completo.
+    // ---------------------------------------------------------------
+    ioOut(port, value) {
+        switch (port) {
+            case 0xF0: this.fpu.writeData(value); break;
+            case 0xF1: this.fpu.writeCommand(value); break;
+            default: break; // puerto no conectado: se ignora, como en hardware real
+        }
+    }
+
+    ioIn(port) {
+        switch (port) {
+            case 0xF0: return this.fpu.readData();
+            case 0xF1: return this.fpu.readStatus();
+            default: return 0xFF; // bus flotante típico cuando no hay periférico
+        }
     }
 
     dad(rp) {

@@ -29,6 +29,46 @@ function updateUI() {
 
     renderMemory();
     renderStack();
+    renderFPU();
+}
+
+function floatBytesToHexDec(bytes) {
+    const hex = Array.from(bytes).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+    const dec = new DataView(bytes.buffer).getFloat32(0, true);
+    return { hex, dec };
+}
+
+function renderFPU() {
+    const fpu = cpu.fpu;
+    if (!fpu) return;
+
+    const a = floatBytesToHexDec(fpu.opA);
+    const b = floatBytesToHexDec(fpu.opB);
+    const r = floatBytesToHexDec(fpu.result);
+
+    document.getElementById('fpu-a-hex').textContent = a.hex;
+    document.getElementById('fpu-a-dec').textContent = a.dec;
+    document.getElementById('fpu-b-hex').textContent = b.hex;
+    document.getElementById('fpu-b-dec').textContent = b.dec;
+    document.getElementById('fpu-r-hex').textContent = r.hex;
+    document.getElementById('fpu-r-dec').textContent = r.dec;
+
+    document.getElementById('fpu-flag-busy').textContent = fpu.status.busy ? '1' : '0';
+    document.getElementById('fpu-flag-error').textContent = fpu.status.error ? '1' : '0';
+    document.getElementById('fpu-flag-divzero').textContent = fpu.status.divZero ? '1' : '0';
+    document.getElementById('fpu-flag-overflow').textContent = fpu.status.overflow ? '1' : '0';
+    document.getElementById('fpu-flag-underflow').textContent = fpu.status.underflow ? '1' : '0';
+
+    const badge = document.getElementById('fpu-ready-badge');
+    badge.textContent = fpu.status.busy ? 'BUSY' : 'READY';
+    badge.className = 'fpu-badge' + (fpu.status.busy ? ' busy' : '');
+
+    const lastOpEl = document.getElementById('fpu-last-op');
+    if (fpu.lastOp) {
+        lastOpEl.textContent = `${fpu.lastOp.a} ${fpu.lastOp.op} ${fpu.lastOp.b} = ${fpu.lastOp.r}`;
+    } else {
+        lastOpEl.textContent = '—';
+    }
 }
 
 function renderStack() {
@@ -185,6 +225,67 @@ document.getElementById('btn-mem-go').addEventListener('click', () => {
     const val = document.getElementById('mem-start-addr').value;
     memoryStart = parseInt(val, 16) || 0;
     renderMemory();
+});
+
+// Demo del coprocesador FPU8231: calcula 1.5 + 2.25 usando el protocolo
+// de puertos 0xF0 (datos) / 0xF1 (comando), y guarda el resultado IEEE754
+// (4 bytes little-endian) en las direcciones 3000H-3003H.
+const FPU_DEMO_PROGRAM = `; ================================================================
+; DEMO: Coprocesador de Punto Flotante (FPU8231) — 1.5 + 2.25 = 3.75
+; ================================================================
+; Protocolo: puerto 0F0H = datos, puerto 0F1H = comando/estado.
+; Comandos: 10H=Sel.OpA  11H=Sel.OpB  20H=ADD  21H=SUB  22H=MUL  23H=DIV  30H=Sel.Lectura Resultado
+ORG 0000H
+
+; --- Seleccionar Operando A y cargar 1.5 (bytes IEEE754 LE: 00 00 C0 3F) ---
+MVI A, 10H
+OUT 0F1H
+MVI A, 00H
+OUT 0F0H
+MVI A, 00H
+OUT 0F0H
+MVI A, 0C0H
+OUT 0F0H
+MVI A, 3FH
+OUT 0F0H
+
+; --- Seleccionar Operando B y cargar 2.25 (bytes IEEE754 LE: 00 00 10 40) ---
+MVI A, 11H
+OUT 0F1H
+MVI A, 00H
+OUT 0F0H
+MVI A, 00H
+OUT 0F0H
+MVI A, 10H
+OUT 0F0H
+MVI A, 40H
+OUT 0F0H
+
+; --- Ejecutar suma en punto flotante (A = A + B) ---
+MVI A, 20H
+OUT 0F1H
+
+; --- Seleccionar lectura del resultado y guardarlo en memoria ---
+MVI A, 30H
+OUT 0F1H
+IN 0F0H
+STA 3000H
+IN 0F0H
+STA 3001H
+IN 0F0H
+STA 3002H
+IN 0F0H
+STA 3003H
+
+HLT`;
+
+document.getElementById('btn-fpu-demo').addEventListener('click', () => {
+    document.getElementById('code-editor').value = FPU_DEMO_PROGRAM;
+    const output = document.getElementById('assembler-output');
+    if (output) {
+        output.textContent = 'Programa de demostración del FPU cargado. Presiona "Assemble & Load" y luego "Run".';
+        output.className = 'success';
+    }
 });
 
 // Initial UI update

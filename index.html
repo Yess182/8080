@@ -84,6 +84,41 @@ HLT"></textarea>
                     </div>
                 </div>
 
+                <div class="card fpu">
+                    <h3>Coprocesador FPU8231 <span class="fpu-badge" id="fpu-ready-badge">READY</span></h3>
+                    <div class="fpu-grid">
+                        <div class="fpu-reg">
+                            <span>Operando A</span>
+                            <div id="fpu-a-hex" class="fpu-hex">00 00 00 00</div>
+                            <div id="fpu-a-dec" class="fpu-dec">0</div>
+                        </div>
+                        <div class="fpu-reg">
+                            <span>Operando B</span>
+                            <div id="fpu-b-hex" class="fpu-hex">00 00 00 00</div>
+                            <div id="fpu-b-dec" class="fpu-dec">0</div>
+                        </div>
+                        <div class="fpu-reg fpu-result">
+                            <span>Resultado</span>
+                            <div id="fpu-r-hex" class="fpu-hex">00 00 00 00</div>
+                            <div id="fpu-r-dec" class="fpu-dec">0</div>
+                        </div>
+                    </div>
+                    <div class="fpu-op-row">
+                        <span>Última operación:</span>
+                        <span id="fpu-last-op">—</span>
+                    </div>
+                    <div class="fpu-flags-row">
+                        <div class="flag-box" title="BUSY: el coprocesador está ocupado calculando."><span>BUSY</span><div id="fpu-flag-busy">0</div></div>
+                        <div class="flag-box" title="ERROR: se produjo un error aritmético en la última operación."><span>ERR</span><div id="fpu-flag-error">0</div></div>
+                        <div class="flag-box" title="DIV_ZERO: se intentó dividir entre cero."><span>DIV0</span><div id="fpu-flag-divzero">0</div></div>
+                        <div class="flag-box" title="OVERFLOW: el resultado excede el rango representable en IEEE754."><span>OVF</span><div id="fpu-flag-overflow">0</div></div>
+                        <div class="flag-box" title="UNDERFLOW: el resultado es demasiado pequeño para representarse con precisión normal."><span>UDF</span><div id="fpu-flag-underflow">0</div></div>
+                    </div>
+                    <div class="controls">
+                        <button id="btn-fpu-demo">Cargar demo: 1.5 + 2.25</button>
+                    </div>
+                </div>
+
                 <div class="card memory">
                     <h3>Memory View</h3>
                     <div class="mem-controls">
@@ -96,6 +131,7 @@ HLT"></textarea>
         </section>
     </main>
 
+    <script src="fpu.js"></script>
     <script src="cpu.js"></script>
     <script src="assembler.js"></script>
     <script src="main.js"></script>
